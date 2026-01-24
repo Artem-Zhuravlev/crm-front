@@ -1,11 +1,13 @@
-<script setup lang="ts">
-import { RouterView } from 'vue-router'
-import BaseHeader from './layouts/BaseHeader.vue'
-</script>
-
 <template>
-  <base-header />
-  <router-view />
+  <v-app>
+    <base-header />
+
+    <v-main>
+      <router-view />
+    </v-main>
+  </v-app>
 </template>
 
-<style scoped></style>
+<script setup lang="ts">
+import BaseHeader from './layouts/BaseHeader.vue'
+</script>
