@@ -52,7 +52,7 @@
           :active="isActive(item.to)"
           rounded
         >
-          <div class="flex align-center gap-2">
+          <div class="d-flex align-center ga-2">
             <v-icon>{{ item.icon }}</v-icon>
             <v-list-item-title>{{ item.title }}</v-list-item-title>
           </div>
