@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
-// ленивые импорты страниц
 const AppointmentsPage = () => import('@/features/appointments/views/AppointmentsPage.vue')
+const ClientsPage = () => import('@/features/clients/views/ClientsPage.vue')
 
 const routes: RouteRecordRaw[] = [
   {
@@ -12,6 +12,11 @@ const routes: RouteRecordRaw[] = [
     path: '/appointments',
     name: 'appointments',
     component: AppointmentsPage,
+  },
+  {
+    path: '/clients',
+    name: 'clients',
+    component: ClientsPage,
   },
 ]
 
