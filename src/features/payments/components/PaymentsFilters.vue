@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex gap-3 mb-4 flex-wrap">
+  <div class="d-flex ga-3 mb-4 flex-wrap">
     <v-select
       v-model="localFilters.clientId"
       :items="clientsOptions"

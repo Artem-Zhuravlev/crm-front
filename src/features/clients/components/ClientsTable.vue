@@ -1,12 +1,14 @@
 <template>
   <v-data-table :headers="headers" :items="items" item-key="id" class="elevation-1">
     <template #item.actions="{ item }">
-      <v-btn icon size="small" @click="$emit('edit', item)">
-        <v-icon>mdi-pencil</v-icon>
-      </v-btn>
-      <v-btn icon size="small" color="red" @click="$emit('delete', item.id)">
-        <v-icon>mdi-delete</v-icon>
-      </v-btn>
+      <div class="d-flex ga-3">
+        <v-btn icon size="small" @click="$emit('edit', item)">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn icon size="small" color="red" @click="$emit('delete', item.id)">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+      </div>
     </template>
   </v-data-table>
 </template>

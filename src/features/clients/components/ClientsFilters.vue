@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex gap-3 mb-4 flex-wrap">
+  <div class="d-flex ga-4 mb-4 flex-wrap">
     <v-text-field
       v-model="localFilters.search"
       label="Пошук за іменем"
