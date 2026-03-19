@@ -1,6 +1,6 @@
 export type Payment = {
-  id: number
-  clientId: number
+  id?: string
+  clientId: string
   amount: number
   date: string
   status: string

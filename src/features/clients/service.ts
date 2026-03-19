@@ -12,12 +12,12 @@ export const ClientsAPI = {
     return res.data
   },
 
-  async update(id: number, client: Partial<Client>): Promise<Client> {
+  async update(id: string, client: Partial<Client>): Promise<Client> {
     const res = await api.put(`/clients/${id}`, client)
     return res.data
   },
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await api.delete(`/clients/${id}`)
   },
 }

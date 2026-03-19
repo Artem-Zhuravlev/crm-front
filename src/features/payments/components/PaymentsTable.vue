@@ -36,7 +36,7 @@ const headers = [
   { title: 'Дії', key: 'actions', sortable: false },
 ]
 
-const getClientName = (id: number) => {
+const getClientName = (id: string) => {
   return props.clients?.find((c) => c.id === id)?.name || '–'
 }
 

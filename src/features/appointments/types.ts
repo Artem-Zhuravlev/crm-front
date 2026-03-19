@@ -1,8 +1,28 @@
+import type { Client } from '@/features/clients/types'
+
 export type Appointment = {
-  id: number
-  client: string
-  service: string
+  id: string
+  title: string
+  description?: string
+  date: string
+  completed: boolean
+  client: Client
+}
+
+export type AppointmentFormValues = {
+  id?: string
+  clientId: string
+  title: string
+  description: string
   date: string
   time: string
-  status: string
+  completed: boolean
+}
+
+export type AppointmentPayload = {
+  clientId: string
+  title: string
+  description?: string
+  date: string
+  completed?: boolean
 }

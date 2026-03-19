@@ -23,7 +23,7 @@ import { reactive, watch, computed } from 'vue'
 import type { Client } from '@/features/clients/types'
 
 const props = defineProps<{
-  filters: { clientId: number | null; status: string | null; date: string }
+  filters: { clientId: string | null; status: string | null; date: string }
   clients?: Client[]
 }>()
 

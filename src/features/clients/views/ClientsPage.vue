@@ -25,7 +25,7 @@ const dialog = ref(false)
 const filters = ref({ search: '', email: '' })
 const clients = ref<Client[]>([])
 
-const form = ref<Client>({ id: 0, name: '', email: '', phone: '' })
+const form = ref<Client>({ name: '', email: '', phone: '' })
 
 const filteredClients = computed(() =>
   (clients.value || []).filter((c) => {
@@ -48,7 +48,7 @@ const fetchClients = async () => {
   }
 }
 
-const deleteClient = async (id: number) => {
+const deleteClient = async (id: string) => {
   try {
     await ClientsAPI.remove(id)
     clients.value = clients.value.filter((c) => c.id !== id)
@@ -69,7 +69,7 @@ const editClient = (client: Client) => {
 
 const saveClient = async (client: Client) => {
   try {
-    if (typeof client.id === 'number' && client.id > 0) {
+    if (client.id) {
       const res = await ClientsAPI.update(client.id, client)
       const idx = clients.value.findIndex((c) => c.id === client.id)
       if (idx !== -1) clients.value[idx] = res

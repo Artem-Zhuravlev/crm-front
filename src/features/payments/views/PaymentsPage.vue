@@ -33,27 +33,48 @@ import PaymentsDialog from '../components/PaymentsDialog.vue'
 
 const dialog = ref(false)
 const form = ref<Payment>({
-  id: 0,
-  clientId: 0,
+  clientId: '',
   amount: 0,
   date: '',
   status: 'Оплачено',
 })
 
 const clients: Client[] = [
-  { id: 1, name: 'Іван Петренко', email: 'ivan@mail.com', phone: '0991234567' },
-  { id: 2, name: 'Олена Коваль', email: 'olena@mail.com', phone: '0669876543' },
+  {
+    id: '6f9d3f0a-30e8-4f44-a4f9-3ccf18f8cc5d',
+    name: 'Іван Петренко',
+    email: 'ivan@mail.com',
+    phone: '0991234567',
+  },
+  {
+    id: '8c7d4f9e-1f83-4e03-b3a8-f45d38e84c79',
+    name: 'Олена Коваль',
+    email: 'olena@mail.com',
+    phone: '0669876543',
+  },
 ]
 
 const filters = ref({
-  clientId: null as number | null,
+  clientId: null as string | null,
   status: null as string | null,
   date: '',
 })
 
 const payments = ref<Payment[]>([
-  { id: 1, clientId: 1, amount: 500, date: '2026-01-24', status: 'Оплачено' },
-  { id: 2, clientId: 2, amount: 300, date: '2026-01-25', status: 'Очікує' },
+  {
+    id: '1f5fe5df-0d8a-48a4-a90e-c87b82f8ab0e',
+    clientId: '6f9d3f0a-30e8-4f44-a4f9-3ccf18f8cc5d',
+    amount: 500,
+    date: '2026-01-24',
+    status: 'Оплачено',
+  },
+  {
+    id: '5b9384cd-d358-4ddf-9be6-18db530f9361',
+    clientId: '8c7d4f9e-1f83-4e03-b3a8-f45d38e84c79',
+    amount: 300,
+    date: '2026-01-25',
+    status: 'Очікує',
+  },
 ])
 
 const filteredPayments = computed(() => {
@@ -66,7 +87,7 @@ const filteredPayments = computed(() => {
 })
 
 const openCreate = () => {
-  form.value = { id: 0, clientId: 0, amount: 0, date: '', status: 'Оплачено' }
+  form.value = { clientId: '', amount: 0, date: '', status: 'Оплачено' }
   dialog.value = true
 }
 
@@ -75,7 +96,7 @@ const savePayment = (payment: Payment) => {
     const idx = payments.value.findIndex((p) => p.id === payment.id)
     if (idx !== -1) payments.value[idx] = { ...payment }
   } else {
-    payments.value.push({ ...payment, id: Date.now() })
+    payments.value.push({ ...payment, id: crypto.randomUUID() })
   }
   dialog.value = false
 }
@@ -85,7 +106,7 @@ const editPayment = (payment: Payment) => {
   dialog.value = true
 }
 
-const deletePayment = (id: number) => {
+const deletePayment = (id: string) => {
   payments.value = payments.value.filter((p) => p.id !== id)
 }
 </script>

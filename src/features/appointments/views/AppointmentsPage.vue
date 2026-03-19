@@ -5,18 +5,23 @@
       <v-btn color="primary" @click="openCreate">Додати запис</v-btn>
     </div>
 
-    <AppointmentsFilters
+    <appointments-filters
       v-model:search="filters.search"
       v-model:status="filters.status"
       v-model:date="filters.date"
-      :status-options="statusOptions"
+      :status-options="filterStatusOptions"
     />
 
-    <AppointmentsTable :items="filteredAppointments" @edit="openEdit" @delete="deleteAppointment" />
+    <appointments-table
+      :items="filteredAppointments"
+      @edit="openEdit"
+      @delete="deleteAppointment"
+    />
 
-    <AppointmentForm
+    <appointments-form
       v-model="dialog"
       :appointment="editingAppointment"
+      :clients="clients"
       :status-options="statusOptions"
       @save="saveAppointment"
     />
@@ -24,14 +29,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import AppointmentsTable from '../components/AppointmentsTabe.vue'
-import AppointmentForm from '../components/AppointmentsForm.vue'
+import { ref, computed, onMounted } from 'vue'
+import dayjs from 'dayjs'
+import type { Client } from '@/features/clients/types'
+import { ClientsAPI } from '@/features/clients/service'
+import type { Appointment, AppointmentFormValues, AppointmentPayload } from '../types'
+import AppointmentsTable from '../components/AppointmentsTable.vue'
+import AppointmentsForm from '../components/AppointmentsForm.vue'
 import AppointmentsFilters from '../components/AppointmentsFilters.vue'
-import type { Appointment } from '../types'
+import { AppointmentsAPI } from '../service'
 
 const dialog = ref(false)
-const editingAppointment = ref<Appointment | null>(null)
+const editingAppointment = ref<AppointmentFormValues | null>(null)
+const appointments = ref<Appointment[]>([])
+const clients = ref<Client[]>([])
 
 const filters = ref({
   search: '',
@@ -39,68 +50,110 @@ const filters = ref({
   date: '',
 })
 
-const statusOptions = ['Заплановано', 'Виконано', 'Скасовано']
+const statusOptions = [
+  { title: 'Заплановано', value: false },
+  { title: 'Виконано', value: true },
+]
 
-const appointments = ref<Appointment[]>([
-  {
-    id: 1,
-    client: 'Іван Петренко',
-    service: 'Тату на руці',
-    date: '2026-01-24',
-    time: '14:00',
-    status: 'Заплановано',
-  },
-  {
-    id: 2,
-    client: 'Олена Коваль',
-    service: 'Консультація',
-    date: '2026-01-25',
-    time: '10:30',
-    status: 'Виконано',
-  },
-])
+const filterStatusOptions = statusOptions.map((option) => option.title)
+
+const createEmptyForm = (): AppointmentFormValues => ({
+  clientId: '',
+  title: '',
+  description: '',
+  date: '',
+  time: '',
+  completed: false,
+})
+
+const toFormValues = (appointment: Appointment): AppointmentFormValues => ({
+  id: appointment.id,
+  clientId: appointment.client.id || '',
+  title: appointment.title,
+  description: appointment.description || '',
+  date: dayjs(appointment.date).format('YYYY-MM-DD'),
+  time: dayjs(appointment.date).format('HH:mm'),
+  completed: appointment.completed,
+})
+
+const toPayload = (form: AppointmentFormValues): AppointmentPayload => ({
+  clientId: form.clientId,
+  title: form.title.trim(),
+  description: form.description.trim() || undefined,
+  date: `${form.date}T${form.time}:00`,
+  completed: form.completed,
+})
 
 const filteredAppointments = computed(() => {
+  const searchLower = filters.value.search?.toLowerCase() || ''
+
   return appointments.value.filter((a) => {
-    const matchSearch = filters.value.search
-      ? a.client.toLowerCase().includes(filters.value.search.toLowerCase())
-      : true
+    const matchesStatus =
+      !filters.value.status ||
+      (filters.value.status === 'Виконано' ? a.completed : !a.completed)
 
-    const matchStatus = filters.value.status ? a.status === filters.value.status : true
-
-    const matchDate = filters.value.date ? a.date === filters.value.date : true
-
-    return matchSearch && matchStatus && matchDate
+    return (
+      `${a.client?.name || ''} ${a.title} ${a.description || ''}`
+        .toLowerCase()
+        .includes(searchLower) &&
+      matchesStatus &&
+      (!filters.value.date || dayjs(a.date).format('YYYY-MM-DD') === filters.value.date)
+    )
   })
 })
 
+const fetchData = async () => {
+  try {
+    const [appointmentsResponse, clientsResponse] = await Promise.all([
+      AppointmentsAPI.getAll(),
+      ClientsAPI.getAll(),
+    ])
+
+    appointments.value = appointmentsResponse
+    clients.value = clientsResponse
+  } catch (err) {
+    console.error('Failed to fetch appointments', err)
+  }
+}
+
+const saveAppointment = async (form: AppointmentFormValues) => {
+  try {
+    const payload = toPayload(form)
+
+    if (form.id) {
+      const res = await AppointmentsAPI.update(form.id, payload)
+      const idx = appointments.value.findIndex((a) => a.id === form.id)
+      if (idx !== -1) appointments.value[idx] = res
+    } else {
+      const res = await AppointmentsAPI.create(payload)
+      appointments.value.push(res)
+    }
+
+    editingAppointment.value = null
+    dialog.value = false
+  } catch (err) {
+    console.error('Failed to save appointment', err)
+  }
+}
+
+const deleteAppointment = async (id: string) => {
+  try {
+    await AppointmentsAPI.remove(id)
+    appointments.value = appointments.value.filter((a) => a.id !== id)
+  } catch (err) {
+    console.error('Failed to delete appointment', err)
+  }
+}
+
 const openCreate = () => {
-  editingAppointment.value = null
+  editingAppointment.value = createEmptyForm()
   dialog.value = true
 }
 
 const openEdit = (item: Appointment) => {
-  editingAppointment.value = { ...item }
+  editingAppointment.value = toFormValues(item)
   dialog.value = true
 }
 
-const saveAppointment = (data: Appointment) => {
-  if (data.id) {
-    const index = appointments.value.findIndex((a) => a.id === data.id)
-    if (index !== -1) {
-      appointments.value[index] = data
-    }
-  } else {
-    appointments.value.push({
-      ...data,
-      id: Date.now(),
-    })
-  }
-
-  dialog.value = false
-}
-
-const deleteAppointment = (id: number) => {
-  appointments.value = appointments.value.filter((a) => a.id !== id)
-}
+onMounted(fetchData)
 </script>

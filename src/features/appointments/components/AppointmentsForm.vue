@@ -8,11 +8,24 @@
       </v-card-title>
 
       <v-card-text>
-        <v-text-field v-model="form.client" label="Клієнт" />
-        <v-text-field v-model="form.service" label="Послуга" />
+        <v-select
+          v-model="form.clientId"
+          :items="clients"
+          item-title="name"
+          item-value="id"
+          label="Клієнт"
+        />
+        <v-text-field v-model="form.title" label="Назва запису" />
+        <v-textarea v-model="form.description" label="Опис" rows="3" />
         <v-text-field v-model="form.date" type="date" label="Дата" />
         <v-text-field v-model="form.time" type="time" label="Час" />
-        <v-select v-model="form.status" :items="statusOptions" label="Статус" />
+        <v-select
+          v-model="form.completed"
+          :items="statusOptions"
+          item-title="title"
+          item-value="value"
+          label="Статус"
+        />
       </v-card-text>
 
       <v-card-actions>
@@ -26,17 +39,19 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import type { Appointment } from '../types'
+import type { Client } from '@/features/clients/types'
+import type { AppointmentFormValues } from '../types'
 
 const props = defineProps<{
   modelValue: boolean
-  appointment: Appointment | null
-  statusOptions: string[]
+  appointment: AppointmentFormValues | null
+  clients: Client[]
+  statusOptions: Array<{ title: string; value: boolean }>
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', v: boolean): void
-  (e: 'save', v: Appointment): void
+  (e: 'save', v: AppointmentFormValues): void
 }>()
 
 const dialog = computed({
@@ -44,24 +59,19 @@ const dialog = computed({
   set: (value: boolean) => emit('update:modelValue', value),
 })
 
-const form = ref<Appointment>({
-  id: 0,
-  client: '',
-  service: '',
+const createEmptyForm = (): AppointmentFormValues => ({
+  clientId: '',
+  title: '',
+  description: '',
   date: '',
   time: '',
-  status: 'Заплановано',
+  completed: false,
 })
 
+const form = ref<AppointmentFormValues>(createEmptyForm())
+
 const reset = () => {
-  form.value = {
-    id: 0,
-    client: '',
-    service: '',
-    date: '',
-    time: '',
-    status: 'Заплановано',
-  }
+  form.value = createEmptyForm()
 }
 
 watch(
@@ -81,7 +91,7 @@ const close = () => {
 }
 
 const save = () => {
-  if (!form.value.client || !form.value.date || !form.value.time) return
+  if (!form.value.clientId || !form.value.title || !form.value.date || !form.value.time) return
   emit('save', { ...form.value })
 }
 </script>
