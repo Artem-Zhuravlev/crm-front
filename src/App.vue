@@ -1,9 +1,9 @@
 <template>
   <v-app>
-    <base-header />
+    <base-header v-if="!hideLayout" />
 
     <v-main>
-      <div class="content-container mt-7" fluid>
+      <div class="content-container" :class="{ 'content-container--spaced': !hideLayout }" fluid>
         <router-view />
       </div>
     </v-main>
@@ -11,7 +11,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import BaseHeader from './layouts/BaseHeader.vue'
+
+const route = useRoute()
+const hideLayout = computed(() => Boolean(route.meta.hideLayout))
 </script>
 
 <style scoped>
@@ -19,8 +24,12 @@ import BaseHeader from './layouts/BaseHeader.vue'
   padding: 16px;
 }
 .content-container {
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.content-container--spaced {
+  margin-top: 28px;
 }
 </style>
