@@ -9,6 +9,22 @@
       </v-toolbar-title>
 
       <v-spacer></v-spacer>
+
+      <v-select
+        v-model="selectedLocale"
+        class="language-select mr-2"
+        :items="languageOptions"
+        item-title="title"
+        item-value="value"
+        :aria-label="t('language.label')"
+        density="compact"
+        variant="plain"
+        menu-icon="mdi-chevron-down"
+        hide-selected
+        single-line
+        hide-details
+      />
+
       <v-menu
         v-model="menu"
         offset-y
@@ -25,10 +41,10 @@
 
         <v-list>
           <v-list-item @click="handleCommand('settings')">
-            <v-list-item-title>Налаштування</v-list-item-title>
+            <v-list-item-title>{{ t('header.settings') }}</v-list-item-title>
           </v-list-item>
           <v-list-item @click="handleCommand('logout')">
-            <v-list-item-title>Вийти</v-list-item-title>
+            <v-list-item-title>{{ t('header.logout') }}</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -46,7 +62,7 @@
       <v-list nav dense>
         <v-list-item
           v-for="item in menuItems"
-          :key="item.title"
+          :key="item.to"
           :to="item.to"
           link
           :active="isActive(item.to)"
@@ -54,7 +70,7 @@
         >
           <div class="d-flex align-center ga-2">
             <v-icon>{{ item.icon }}</v-icon>
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
+            <v-list-item-title>{{ t(item.labelKey) }}</v-list-item-title>
           </div>
         </v-list-item>
       </v-list>
@@ -63,28 +79,52 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute, useRouter } from 'vue-router'
+import { setAppLocale, supportedLocales, type AppLocale } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 
 const drawer = ref(true)
 const mini = ref(false)
 const menu = ref(false)
 
 const route = useRoute()
+const router = useRouter()
+const authStore = useAuthStore()
+const { locale, t } = useI18n()
 const isMobile = computed(() => window.innerWidth < 768)
 
 const menuItems = [
-  { title: 'Записи', icon: 'mdi-calendar', to: '/appointments' },
-  { title: 'Клієнти', icon: 'mdi-account-multiple', to: '/clients' },
-  { title: 'Платежі', icon: 'mdi-cash', to: '/payments' },
-  { title: 'Статистика', icon: 'mdi-chart-line', to: '/stats' },
+  { labelKey: 'header.appointments', icon: 'mdi-calendar', to: '/appointments' },
+  { labelKey: 'header.clients', icon: 'mdi-account-multiple', to: '/clients' },
+  { labelKey: 'header.payments', icon: 'mdi-cash', to: '/payments' },
+  { labelKey: 'header.history', icon: 'mdi-history', to: '/history' },
+  { labelKey: 'header.stats', icon: 'mdi-chart-line', to: '/stats' },
 ]
+
+const selectedLocale = computed({
+  get: () => locale.value,
+  set: (value: string) => {
+    if (supportedLocales.includes(value as AppLocale)) {
+      setAppLocale(value as AppLocale)
+    }
+  },
+})
+
+const languageOptions = computed(() => {
+  return supportedLocales.map((value) => ({
+    value,
+    title: value.toUpperCase(),
+  }))
+})
 
 const isActive = (path: string) => route.path.startsWith(path)
 
 const handleCommand = (command: string) => {
   if (command === 'logout') {
-    console.log('Logout')
+    authStore.logout()
+    void router.push('/login')
   } else if (command === 'settings') {
     console.log('Settings')
   }
@@ -100,5 +140,55 @@ const handleCommand = (command: string) => {
 .v-list-item--active {
   background-color: #3b82f6;
   color: white;
+}
+
+.language-select {
+  max-width: 106px;
+  min-width: 96px;
+}
+
+:deep(.language-select .v-field) {
+  border-radius: 10px;
+  padding-inline: 0;
+  color: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+}
+
+:deep(.language-select .v-field__input) {
+  min-height: 32px;
+  padding-inline-start: 10px;
+  padding-inline-end: 10px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+}
+
+:deep(.language-select .v-select__selection-text) {
+  color: rgba(255, 255, 255, 0.96);
+}
+
+:deep(.language-select .v-field__append-inner) {
+  display: flex;
+  align-items: center;
+  padding-top: 0;
+  padding-inline-start: 0;
+  padding-inline-end: 10px;
+}
+
+:deep(.language-select .v-field__prepend-inner) {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .language-select {
+    max-width: 88px;
+    min-width: 84px;
+  }
 }
 </style>

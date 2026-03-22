@@ -4,8 +4,12 @@
       {{ getClientName(item.clientId) }}
     </template>
 
-    <template #item.status="{ item }">
-      <v-chip :color="statusColor(item.status)" size="small">{{ item.status }}</v-chip>
+    <template #item.date="{ item }">
+      {{ formatDate(item.date) }}
+    </template>
+
+    <template #item.time="{ item }">
+      {{ formatTime(item.date) }}
     </template>
 
     <template #item.actions="{ item }">
@@ -20,6 +24,9 @@
 </template>
 
 <script setup lang="ts">
+import dayjs from 'dayjs'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Payment } from '../types'
 import type { Client } from '@/features/clients/types'
 
@@ -28,28 +35,21 @@ const props = defineProps<{
   clients?: Client[]
 }>()
 
-const headers = [
-  { title: 'Клієнт', key: 'clientId' },
-  { title: 'Сума', key: 'amount' },
-  { title: 'Дата', key: 'date' },
-  { title: 'Статус', key: 'status' },
-  { title: 'Дії', key: 'actions', sortable: false },
-]
+const { t } = useI18n()
+
+const headers = computed(() => [
+  { title: t('common.client'), key: 'clientId' },
+  { title: t('common.amount'), key: 'amount' },
+  { title: t('common.date'), key: 'date' },
+  { title: t('common.time'), key: 'time' },
+  { title: t('common.method'), key: 'method' },
+  { title: t('common.actions'), key: 'actions', sortable: false },
+])
 
 const getClientName = (id: string) => {
   return props.clients?.find((c) => c.id === id)?.name || '–'
 }
 
-const statusColor = (status: string) => {
-  switch (status) {
-    case 'Оплачено':
-      return 'green'
-    case 'Очікує':
-      return 'orange'
-    case 'Скасовано':
-      return 'red'
-    default:
-      return 'grey'
-  }
-}
+const formatDate = (value: string) => dayjs(value).format('DD.MM.YYYY')
+const formatTime = (value: string) => dayjs(value).format('HH:mm')
 </script>

@@ -1,18 +1,19 @@
 <template>
   <div>
-    <!-- Заголовок и кнопка -->
     <div class="d-flex align-center justify-space-between mb-4">
-      <h2 class="text-h5 font-weight-bold">Платежі</h2>
-      <v-btn color="primary" @click="openCreate">Додати платіж</v-btn>
+      <h2 class="text-h5 font-weight-bold">{{ t('payments.pageTitle') }}</h2>
+      <v-btn color="primary" @click="openCreate">{{ t('payments.add') }}</v-btn>
     </div>
 
-    <!-- Фильтры -->
-    <PaymentsFilters v-model:filters="filters" />
+    <PaymentsFilters v-model:filters="filters" :clients="clients" />
 
-    <!-- Таблица -->
-    <PaymentsTable :items="filteredPayments" @edit="editPayment" @delete="deletePayment" />
+    <PaymentsTable
+      :items="filteredPayments"
+      :clients="clients"
+      @edit="editPayment"
+      @delete="deletePayment"
+    />
 
-    <!-- Диалог -->
     <PaymentsDialog
       v-model:open="dialog"
       :payment="form"
@@ -24,89 +25,118 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { Payment } from '../types'
+import { ref, computed, onMounted } from 'vue'
+import dayjs from 'dayjs'
+import { useI18n } from 'vue-i18n'
+import type { Payment, PaymentFormValues, PaymentPayload } from '../types'
 import type { Client } from '@/features/clients/types'
+import { ClientsAPI } from '@/features/clients/service'
 import PaymentsFilters from '../components/PaymentsFilters.vue'
 import PaymentsTable from '../components/PaymentsTable.vue'
 import PaymentsDialog from '../components/PaymentsDialog.vue'
+import { PaymentsAPI } from '../service'
+
+const { t } = useI18n()
 
 const dialog = ref(false)
-const form = ref<Payment>({
+const createEmptyForm = (): PaymentFormValues => ({
   clientId: '',
   amount: 0,
   date: '',
-  status: 'Оплачено',
+  time: '',
+  method: '',
 })
 
-const clients: Client[] = [
-  {
-    id: '6f9d3f0a-30e8-4f44-a4f9-3ccf18f8cc5d',
-    name: 'Іван Петренко',
-    email: 'ivan@mail.com',
-    phone: '0991234567',
-  },
-  {
-    id: '8c7d4f9e-1f83-4e03-b3a8-f45d38e84c79',
-    name: 'Олена Коваль',
-    email: 'olena@mail.com',
-    phone: '0669876543',
-  },
-]
+const form = ref<PaymentFormValues>(createEmptyForm())
+const clients = ref<Client[]>([])
+const payments = ref<Payment[]>([])
 
 const filters = ref({
   clientId: null as string | null,
-  status: null as string | null,
+  method: '',
   date: '',
 })
 
-const payments = ref<Payment[]>([
-  {
-    id: '1f5fe5df-0d8a-48a4-a90e-c87b82f8ab0e',
-    clientId: '6f9d3f0a-30e8-4f44-a4f9-3ccf18f8cc5d',
-    amount: 500,
-    date: '2026-01-24',
-    status: 'Оплачено',
-  },
-  {
-    id: '5b9384cd-d358-4ddf-9be6-18db530f9361',
-    clientId: '8c7d4f9e-1f83-4e03-b3a8-f45d38e84c79',
-    amount: 300,
-    date: '2026-01-25',
-    status: 'Очікує',
-  },
-])
+const toFormValues = (payment: Payment): PaymentFormValues => ({
+  id: payment.id,
+  clientId: payment.clientId,
+  amount: Number(payment.amount),
+  date: dayjs(payment.date).format('YYYY-MM-DD'),
+  time: dayjs(payment.date).format('HH:mm'),
+  method: payment.method || '',
+})
+
+const toPayload = (payment: PaymentFormValues): PaymentPayload => ({
+  clientId: payment.clientId,
+  amount: Number(payment.amount),
+  date: `${payment.date}T${payment.time || '00:00'}:00`,
+  method: payment.method.trim() || undefined,
+})
 
 const filteredPayments = computed(() => {
   return payments.value.filter((p) => {
     const matchClient = filters.value.clientId ? p.clientId === filters.value.clientId : true
-    const matchStatus = filters.value.status ? p.status === filters.value.status : true
-    const matchDate = filters.value.date ? p.date === filters.value.date : true
-    return matchClient && matchStatus && matchDate
+    const matchMethod = filters.value.method
+      ? (p.method || '').toLowerCase().includes(filters.value.method.toLowerCase())
+      : true
+    const matchDate = filters.value.date
+      ? dayjs(p.date).format('YYYY-MM-DD') === filters.value.date
+      : true
+    return matchClient && matchMethod && matchDate
   })
 })
 
+const fetchData = async () => {
+  try {
+    const [paymentsResponse, clientsResponse] = await Promise.all([
+      PaymentsAPI.getAll(),
+      ClientsAPI.getAll(),
+    ])
+
+    payments.value = paymentsResponse
+    clients.value = clientsResponse
+  } catch (err) {
+    console.error('Не удалось загрузить платежи', err)
+  }
+}
+
 const openCreate = () => {
-  form.value = { clientId: '', amount: 0, date: '', status: 'Оплачено' }
+  form.value = createEmptyForm()
   dialog.value = true
 }
 
-const savePayment = (payment: Payment) => {
-  if (payment.id) {
-    const idx = payments.value.findIndex((p) => p.id === payment.id)
-    if (idx !== -1) payments.value[idx] = { ...payment }
-  } else {
-    payments.value.push({ ...payment, id: crypto.randomUUID() })
+const savePayment = async (payment: PaymentFormValues) => {
+  try {
+    const payload = toPayload(payment)
+
+    if (payment.id) {
+      const updatedPayment = await PaymentsAPI.update(payment.id, payload)
+      const idx = payments.value.findIndex((p) => p.id === payment.id)
+      if (idx !== -1) payments.value[idx] = updatedPayment
+    } else {
+      const createdPayment = await PaymentsAPI.create(payload)
+      payments.value.unshift(createdPayment)
+    }
+
+    dialog.value = false
+  } catch (err) {
+    console.error('Ошибка при сохранении платежа', err)
   }
-  dialog.value = false
 }
 
 const editPayment = (payment: Payment) => {
-  form.value = { ...payment }
+  form.value = toFormValues(payment)
   dialog.value = true
 }
 
-const deletePayment = (id: string) => {
-  payments.value = payments.value.filter((p) => p.id !== id)
+const deletePayment = async (id: string) => {
+  try {
+    await PaymentsAPI.remove(id)
+    payments.value = payments.value.filter((p) => p.id !== id)
+  } catch (err) {
+    console.error('Ошибка при удалении платежа', err)
+  }
 }
+
+onMounted(fetchData)
 </script>

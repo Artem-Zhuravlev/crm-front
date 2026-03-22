@@ -1,8 +1,8 @@
 <template>
   <div>
     <div class="d-flex align-center justify-space-between mb-4">
-      <h2 class="text-h5 font-weight-bold">Клієнти</h2>
-      <v-btn color="primary" @click="openCreate">Додати клієнта</v-btn>
+      <h2 class="text-h5 font-weight-bold">{{ t('clients.pageTitle') }}</h2>
+      <v-btn color="primary" @click="openCreate">{{ t('clients.add') }}</v-btn>
     </div>
 
     <ClientsFilters v-model:filters="filters" />
@@ -15,11 +15,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Client } from '../types'
 import ClientsFilters from '../components/ClientsFilters.vue'
 import ClientsTable from '../components/ClientsTable.vue'
 import ClientsDialog from '../components/ClientsDialog.vue'
 import { ClientsAPI } from '../service'
+
+const { t } = useI18n()
 
 const dialog = ref(false)
 const filters = ref({ search: '', email: '' })

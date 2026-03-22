@@ -2,19 +2,19 @@
   <v-dialog v-model="dialog" max-width="500">
     <v-card>
       <v-card-title>
-        <span class="text-h6">{{ client.id ? 'Редагувати клієнта' : 'Новий клієнт' }}</span>
+        <span class="text-h6">{{ client.id ? t('clients.edit') : t('clients.new') }}</span>
       </v-card-title>
 
       <v-card-text>
-        <v-text-field v-model="localClient.name" label="Ім'я" />
+        <v-text-field v-model="localClient.name" :label="t('clients.name')" />
         <v-text-field v-model="localClient.email" label="Email" />
-        <v-text-field v-model="localClient.phone" label="Телефон" />
+        <v-text-field v-model="localClient.phone" :label="t('clients.phone')" />
       </v-card-text>
 
       <v-card-actions>
         <v-spacer />
-        <v-btn text @click="close">Скасувати</v-btn>
-        <v-btn color="primary" @click="save">Зберегти</v-btn>
+        <v-btn text @click="close">{{ t('common.cancel') }}</v-btn>
+        <v-btn color="primary" @click="save">{{ t('common.save') }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -22,7 +22,10 @@
 
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Client } from '../types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   open: boolean

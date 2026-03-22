@@ -3,27 +3,25 @@
     <v-select
       v-model="localFilters.clientId"
       :items="clientsOptions"
-      label="Клієнт"
+      item-title="name"
+      item-value="id"
+      :label="t('common.client')"
       clearable
-      dense
     />
-    <v-select
-      v-model="localFilters.status"
-      :items="['Оплачено', 'Очікує', 'Скасовано']"
-      label="Статус"
-      clearable
-      dense
-    />
-    <v-text-field v-model="localFilters.date" type="date" label="Дата" dense clearable />
+    <v-text-field v-model="localFilters.method" :label="t('payments.methodLabel')" clearable />
+    <v-text-field v-model="localFilters.date" type="date" :label="t('common.date')" clearable />
   </div>
 </template>
 
 <script setup lang="ts">
 import { reactive, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Client } from '@/features/clients/types'
 
+const { t } = useI18n()
+
 const props = defineProps<{
-  filters: { clientId: string | null; status: string | null; date: string }
+  filters: { clientId: string | null; method: string; date: string }
   clients?: Client[]
 }>()
 
@@ -35,7 +33,11 @@ const localFilters = reactive({ ...props.filters })
 
 watch(localFilters, (val) => emit('update:filters', val), { deep: true })
 
-const clientsOptions = computed(
-  () => props.clients?.map((c) => ({ label: c.name, value: c.id })) || [],
+watch(
+  () => props.filters,
+  (val) => Object.assign(localFilters, val),
+  { deep: true },
 )
+
+const clientsOptions = computed(() => props.clients || [])
 </script>

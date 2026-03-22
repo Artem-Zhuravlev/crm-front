@@ -14,16 +14,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Client } from '../types'
 
 const props = defineProps<{
   items: Client[]
 }>()
 
-const headers = [
-  { title: "Ім'я", key: 'name' },
+const { t } = useI18n()
+
+const headers = computed(() => [
+  { title: t('clients.name'), key: 'name' },
   { title: 'Email', key: 'email' },
-  { title: 'Телефон', key: 'phone' },
-  { title: 'Дії', key: 'actions', sortable: false },
-]
+  { title: t('clients.phone'), key: 'phone' },
+  { title: t('common.actions'), key: 'actions', sortable: false },
+])
 </script>
