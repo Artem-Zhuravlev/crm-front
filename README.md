@@ -29,6 +29,29 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
+## Environment setup
+
+Create an environment file from template:
+
+```sh
+cp .env.example .env.local
+```
+
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Set values in `.env.local`:
+
+```env
+VITE_API_URL=http://localhost:3000
+VITE_GOOGLE_CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+```
+
+`VITE_GOOGLE_CLIENT_ID` must be the same as backend `GOOGLE_CLIENT_ID`.
+
 ### Compile and Hot-Reload for Development
 
 ```sh
