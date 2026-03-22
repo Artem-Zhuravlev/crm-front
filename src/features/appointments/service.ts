@@ -1,9 +1,14 @@
-import type { Appointment, AppointmentPayload } from './types'
+import type {
+  Appointment,
+  AppointmentFiltersQuery,
+  AppointmentPayload,
+  AppointmentUpdatePayload,
+} from './types'
 import { api } from '@/config/api'
 
 export const AppointmentsAPI = {
-  async getAll(): Promise<Appointment[]> {
-    const res = await api.get('/appointments')
+  async getAll(params?: AppointmentFiltersQuery): Promise<Appointment[]> {
+    const res = await api.get('/appointments', { params })
     return res.data
   },
 
@@ -17,7 +22,7 @@ export const AppointmentsAPI = {
     return res.data
   },
 
-  async update(id: string, payload: AppointmentPayload): Promise<Appointment> {
+  async update(id: string, payload: AppointmentUpdatePayload): Promise<Appointment> {
     const res = await api.patch(`/appointments/${id}`, payload)
     return res.data
   },

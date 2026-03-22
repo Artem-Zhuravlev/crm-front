@@ -13,8 +13,8 @@
     </template>
 
     <template #item.status="{ item }">
-      <v-chip :color="statusColor(item.completed)" size="small">
-        {{ item.completed ? 'Виконано' : 'Заплановано' }}
+      <v-chip :color="statusColor(item.status)" size="small">
+        {{ statusLabel(item.status) }}
       </v-chip>
     </template>
 
@@ -33,7 +33,12 @@
 
 <script setup lang="ts">
 import dayjs from 'dayjs'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Appointment } from '../types'
+import { appointmentStatusColorMap, getAppointmentStatusLabel, type AppointmentStatus } from '../status'
+
+const { t } = useI18n()
 
 defineProps<{
   items: Appointment[]
@@ -44,18 +49,19 @@ defineEmits<{
   (e: 'delete', id: string): void
 }>()
 
-const headers = [
-  { title: 'Дата', key: 'date' },
-  { title: 'Час', key: 'time' },
-  { title: 'Клієнт', key: 'client' },
-  { title: 'Назва', key: 'title' },
-  { title: 'Опис', key: 'description' },
-  { title: 'Статус', key: 'status' },
-  { title: 'Дії', key: 'actions', sortable: false },
-]
+const headers = computed(() => [
+  { title: t('common.date'), key: 'date' },
+  { title: t('common.time'), key: 'time' },
+  { title: t('common.client'), key: 'client' },
+  { title: t('common.title'), key: 'title' },
+  { title: t('common.description'), key: 'description' },
+  { title: t('common.status'), key: 'status' },
+  { title: t('common.actions'), key: 'actions', sortable: false },
+])
 
 const formatDate = (value: string) => dayjs(value).format('DD.MM.YYYY')
 const formatTime = (value: string) => dayjs(value).format('HH:mm')
 
-const statusColor = (completed: boolean) => (completed ? 'green' : 'blue')
+const statusColor = (status: AppointmentStatus) => appointmentStatusColorMap[status]
+const statusLabel = (status: AppointmentStatus) => getAppointmentStatusLabel(t, status)
 </script>
